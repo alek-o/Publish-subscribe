@@ -9,8 +9,9 @@ lang:     pl-PL
 
 Projekt jest dostępny w repozytorium pod adresem:  
 <https://git.cs.put.poznan.pl/voytek/project1>.
-Rysunek wizualizujący struktury danych i ich wykorzystanie w projekcie:
-https://excalidraw.com/#json=dkBOFgaMQIhEkLvhfZgcf,M79FTniQeictq8Wf4TpoFA
+
+Rysunek wizualizujący struktury danych i ich wykorzystanie w projekcie:   
+<https://excalidraw.com/#json=dkBOFgaMQIhEkLvhfZgcf,M79FTniQeictq8Wf4TpoFA>.
 
 
 # Struktury danych
@@ -81,11 +82,15 @@ Kolejka wiadomości implementuje wzorzec publish-subscribe, gdzie subskrybenci m
 
 razem z dołączonym plikiem main.c
 
-gcc -o main main.c queue.c -lpthread
+```
+gcc -o main main.c queue.c -lpthread  
 ./main
+```
 
 oczekiwany rezultat:
 
-test_create_destroy_queue: success
-test_subscribe_unsubscribe: success
-test_1_publisher_1_subscriber: success
+```
+test_create_destroy_queue: success  
+test_subscribe_unsubscribe: success 
+test_1_publisher_1_subscriber: success  
+```
