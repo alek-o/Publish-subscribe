@@ -171,7 +171,7 @@ void addMsg(TQueue *queue, void *msg_data) {
     }
 
     // Signal that the queue is not empty
-    pthread_cond_signal(&queue->not_empty);
+    pthread_cond_broadcast(&queue->not_empty);
     pthread_mutex_unlock(&queue->lock);
 }
 
