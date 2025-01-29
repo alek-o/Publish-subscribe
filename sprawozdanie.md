@@ -8,7 +8,7 @@ lang:     pl-PL
 
 
 Projekt jest dostępny w repozytorium pod adresem:  
-<https://git.cs.put.poznan.pl/voytek/project1>.
+<https://github.com/alek-o/Publish-subscribe>.
 
 Rysunek wizualizujący struktury danych i ich wykorzystanie w projekcie:   
 <https://excalidraw.com/#json=dkBOFgaMQIhEkLvhfZgcf,M79FTniQeictq8Wf4TpoFA>.
