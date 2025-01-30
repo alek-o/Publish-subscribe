@@ -274,6 +274,18 @@ void removeMsg(TQueue *queue, void *msg) {
         current = current->next;
     }
 
+    if (!current) {
+        current = queue->head;
+        prev = NULL;
+        while (current) {
+            if (current->data == msg) {
+                break;
+            }
+            prev = current;
+            current = current->next;
+        }
+    }
+
     // If the message is not found, unlock and return
     if (!current) {
         pthread_mutex_unlock(&queue->lock);
