@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include "queue.h"
@@ -145,6 +146,7 @@ void unsubscribe(TQueue *queue, pthread_t thread) {
 
 void addMsg(TQueue *queue, void *msg_data) {
     pthread_mutex_lock(&queue->lock);
+    printf("entered addMsg\n");
 
     // Exit if there are no subscribers
     if (queue->subscribers == NULL) {
@@ -184,6 +186,7 @@ void addMsg(TQueue *queue, void *msg_data) {
         current = current->next;
     }
 
+    printf("exit addMsg\n"); 
     // Signal that the queue is not empty
     pthread_cond_broadcast(&queue->not_empty);
     pthread_mutex_unlock(&queue->lock);
@@ -193,6 +196,7 @@ void addMsg(TQueue *queue, void *msg_data) {
 
 void* getMsg(TQueue *queue, pthread_t thread) {
     pthread_mutex_lock(&queue->lock);
+    printf("entered getMsg\n");
 
     // Find the subscriber
     Subscriber *current = queue->subscribers;
@@ -208,10 +212,14 @@ void* getMsg(TQueue *queue, pthread_t thread) {
             if (msg) {
                 current->last_read = msg;
                 msg->ref_count--;
+                printf("message %ls ref_count = %d\n", (int*)msg->data, msg->ref_count);
 
                 // If the reference count reaches zero, remove the message
                 if (msg->ref_count == 0) {
+                    printf("messages left before deletion: %d\n", queue->size);
+                    printf("deleting message %ls\n", (int*)msg->data);
                     removeMsg(queue, msg);
+                    printf("messages left: %d\n", queue->size);
                 }
 
                 pthread_mutex_unlock(&queue->lock);
@@ -221,6 +229,7 @@ void* getMsg(TQueue *queue, pthread_t thread) {
         current = current->next;
     }
 
+    printf("exit getMsg\n");
     pthread_mutex_unlock(&queue->lock);
     return NULL; // Thread is not subscribed
 }
@@ -254,53 +263,58 @@ int getAvailable(TQueue *queue, pthread_t thread) {
 
 //--------------------------------------------------------------------------------
 
-void removeMsg(TQueue *queue, void *msg_data) {
-    if (!queue || !msg_data) {
+void removeMsg(TQueue *queue, void *msg) {
+    printf("entered removeMsg\n");
+    if (!queue || !msg) {
+        printf("return 1st statement\n");
         return;
     }
 
+    // Cast the void pointer to a Message pointer
+    Message *target_msg = (Message *)msg;
+
     // Find the message in the queue
-    Message *msg = queue->head;
+    Message *current = queue->head;
     Message *prev = NULL;
-    while (msg) {
-        if (msg->data == msg_data) {
+    while (current) {
+        if (current == target_msg) {
             break;
         }
-        prev = msg;
-        msg = msg->next;
+        prev = current;
+        current = current->next;
     }
 
     // If the message is not found, unlock and return
-    if (!msg) {
+    if (!current) {
+        printf("return 2nd statement\n");
+        pthread_mutex_unlock(&queue->lock);
         return;
     }
 
     // Remove the message from the queue
-    if (queue->head == msg) {
-        queue->head = msg->next;
-        if (queue->tail == msg) {
+    if (queue->head == current) {
+        queue->head = current->next;
+        if (queue->tail == current) {
             queue->tail = NULL;
         }
     } else {
         if (prev) {
-            prev->next = msg->next;
-            if (queue->tail == msg) {
+            prev->next = current->next;
+            if (queue->tail == current) {
                 queue->tail = prev;
             }
         }
     }
 
     // Update the last_read pointers of affected subscribers
-    Subscriber *current = queue->subscribers;
-    while (current) {
-        if (current->last_read == msg) {
-            current->last_read = prev; // Update to the previous message
+    Subscriber *subscriber = queue->subscribers;
+    while (subscriber) {
+        if (subscriber->last_read == current) {
+            subscriber->last_read = prev; // Update to the previous message
         }
-        current = current->next;
+        subscriber = subscriber->next;
     }
 
-    free(msg->data);
-    free(msg);
     queue->size--;
 
     pthread_cond_signal(&queue->not_full);
