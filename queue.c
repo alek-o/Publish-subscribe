@@ -39,6 +39,8 @@ TQueue* createQueue(int size) {
     return queue;
 }
 
+//--------------------------------------------------------------------------------
+
 void destroyQueue(TQueue *queue) {
     if (!queue) {
         return;
@@ -71,6 +73,8 @@ void destroyQueue(TQueue *queue) {
     free(queue);
 }
 
+//--------------------------------------------------------------------------------
+
 void subscribe(TQueue *queue, pthread_t thread) {
     pthread_mutex_lock(&queue->lock);
 
@@ -97,6 +101,8 @@ void subscribe(TQueue *queue, pthread_t thread) {
 
     pthread_mutex_unlock(&queue->lock);
 }
+
+//--------------------------------------------------------------------------------
 
 void unsubscribe(TQueue *queue, pthread_t thread) {
     pthread_mutex_lock(&queue->lock);
@@ -134,6 +140,8 @@ void unsubscribe(TQueue *queue, pthread_t thread) {
 
     pthread_mutex_unlock(&queue->lock);
 }
+
+//--------------------------------------------------------------------------------
 
 void addMsg(TQueue *queue, void *msg_data) {
     pthread_mutex_lock(&queue->lock);
@@ -175,6 +183,8 @@ void addMsg(TQueue *queue, void *msg_data) {
     pthread_mutex_unlock(&queue->lock);
 }
 
+//--------------------------------------------------------------------------------
+
 void* getMsg(TQueue *queue, pthread_t thread) {
     pthread_mutex_lock(&queue->lock);
 
@@ -209,6 +219,8 @@ void* getMsg(TQueue *queue, pthread_t thread) {
     return NULL; // Thread is not subscribed
 }
 
+//--------------------------------------------------------------------------------
+
 int getAvailable(TQueue *queue, pthread_t thread) {
     pthread_mutex_lock(&queue->lock);
 
@@ -233,6 +245,8 @@ int getAvailable(TQueue *queue, pthread_t thread) {
     pthread_mutex_unlock(&queue->lock);
     return 0; // Thread is not subscribed
 }
+
+//--------------------------------------------------------------------------------
 
 void removeMsg(TQueue *queue, void *msg_data) {
     if (!queue || !msg_data) {
@@ -270,12 +284,23 @@ void removeMsg(TQueue *queue, void *msg_data) {
         }
     }
 
+    // Update the last_read pointers of affected subscribers
+    Subscriber *current = queue->subscribers;
+    while (current) {
+        if (current->last_read == msg) {
+            current->last_read = prev; // Update to the previous message
+        }
+        current = current->next;
+    }
+
     free(msg->data);
     free(msg);
     queue->size--;
 
     pthread_cond_signal(&queue->not_full);
 }
+
+//--------------------------------------------------------------------------------
 
 void setSize(TQueue *queue, int size) {
     pthread_mutex_lock(&queue->lock);
