@@ -216,7 +216,7 @@ void *routine_default(void *args) {
 }
 
 void *simple_test(void *arg) {
-    bool *success = malloc(sizeof(bool));
+    bool *success = malloc(sizeof(bool*));
     *success = true;
 
     TQueue *queue = createQueue(10);
@@ -253,6 +253,66 @@ void *simple_test(void *arg) {
     return success;
 }
 
+void *routine_big(void *args) {
+    RoutineArgs *r_args = (RoutineArgs *)args;
+
+    printf("Thread %d subscribing...\n", r_args->routine_number);
+    subscribe(r_args->queue, pthread_self());
+
+    int **msgs = malloc(sizeof(int*) * 20);
+    for (int i = 0; i < 20; i++) {
+        msgs[i] = malloc(sizeof(int*));
+        msgs[i] = getMsg(r_args->queue, pthread_self());
+        if (msgs[i]) {
+            printf("Thread %d received message: %d\n", r_args->routine_number, *(int*)msgs[i]);
+        }
+    }
+
+    unsubscribe(r_args->queue, pthread_self());
+    printf("Thread %d unsubscribed.\n", r_args->routine_number);
+
+    free(r_args);
+    return NULL;
+}
+
+void *test_big(void *result) {
+    bool *success = malloc(sizeof(bool*));
+    *success = true;
+
+    TQueue *queue = createQueue(5);
+
+    RoutineArgs **r_args = malloc(sizeof(RoutineArgs*) * 10);
+    for (int i = 0; i < 10; i++) {
+        r_args[i] = malloc(sizeof(RoutineArgs*));
+        r_args[i]->queue = queue;
+        r_args[i]->routine_number = i;
+    }
+
+    pthread_t threads[10];
+    for (int i = 0; i < 10; i++) {
+        pthread_create(&threads[i], NULL, routine_big, r_args[i]);
+    }
+
+    sleep(1);
+
+    int **msgs = malloc(sizeof(int*) * 20);
+    for (int i = 0; i < 20; i++)
+    {
+        msgs[i] = malloc(sizeof(int*));
+        *msgs[i] = i * 10;
+        addMsg(queue, msgs[i]);
+    }
+
+    for (int i = 0; i < 10; i++) {
+        pthread_join(threads[i], NULL);
+    }
+    free(msgs);
+    free(r_args);
+    destroyQueue(queue);
+
+    return success;
+}
+
 int main() {
     bool result1 = test_create_destroy_queue();
     printf("test_create_destroy_queue: %s\n", result1 ? "success" : "failed");
@@ -267,6 +327,10 @@ int main() {
     bool *simple_result = simple_test(NULL);
     printf("simple_test: %s\n", *simple_result ? "success" : "failed");
     free(simple_result);
+
+    bool *big_result = test_big(NULL);
+    printf("test_big: %s\n", *big_result ? "success" : "failed");
+    free(big_result);
 
     return 0;
 }
