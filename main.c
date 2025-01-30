@@ -136,56 +136,56 @@ void* test_1_publisher_1_subscriber(void* arg) {
     return success;
 }
 
-void* threadBusyWait(void*) {
-    while (true) {}
-}
+// void* threadBusyWait(void* arg) {
+//     while (true) {}
+// }
 
-void *test4(void *arg) {
-    bool *success = malloc(sizeof(bool));
-    *success = true;
+// void *test4(void *arg) {
+//     bool *success = malloc(sizeof(bool));
+//     *success = true;
 
-    TQueue *queue = createQueue(10);
-    pthread_t** thread = malloc(sizeof(pthread_t*) * 2);
-    thread[0] = malloc(sizeof(pthread_t));
-    thread[1] = malloc(sizeof(pthread_t));
+//     TQueue *queue = createQueue(10);
+//     pthread_t** thread = malloc(sizeof(pthread_t*) * 2);
+//     thread[0] = malloc(sizeof(pthread_t));
+//     thread[1] = malloc(sizeof(pthread_t));
 
-    pthread_create(thread[0], NULL, threadBusyWait, NULL);
-    pthread_create(thread[1], NULL, threadBusyWait, NULL);
+//     pthread_create(thread[0], NULL, threadBusyWait, NULL);
+//     pthread_create(thread[1], NULL, threadBusyWait, NULL);
 
-    subscribe(queue, *thread[0]);
-    subscribe(queue, *thread[1]);
+//     subscribe(queue, *thread[0]);
+//     subscribe(queue, *thread[1]);
 
-    int *g1 = getMsg(queue, *thread[0]);
+//     int *g1 = getMsg(queue, *thread[0]);
 
-    int *msg1 = malloc(sizeof(int));
-    *msg1 = 10;
-    int *msg2 = malloc(sizeof(int));
-    *msg2 = 20;
+//     int *msg1 = malloc(sizeof(int));
+//     *msg1 = 10;
+//     int *msg2 = malloc(sizeof(int));
+//     *msg2 = 20;
 
-    addMsg(queue, msg1);
-    addMsg(queue, msg2);
+//     addMsg(queue, msg1);
+//     addMsg(queue, msg2);
 
-    if (*g1 == 10)
-    {
+//     if (*g1 == 10)
+//     {
 
-    }
-    else
-    {
-        success = false;
-    }
+//     }
+//     else
+//     {
+//         success = false;
+//     }
 
-    free(g1);
+//     free(g1);
 
-    pthread_join(*thread[0], NULL);
-    pthread_join(*thread[1], NULL);
+//     pthread_join(*thread[0], NULL);
+//     pthread_join(*thread[1], NULL);
 
-    free(thread[0]);
-    free(thread[1]);
+//     free(thread[0]);
+//     free(thread[1]);
 
-    destroyQueue(queue);
+//     destroyQueue(queue);
 
-    return success;
-}
+//     return success;
+// }
 
 typedef struct RoutineArgs {
     TQueue *queue;
@@ -211,20 +211,9 @@ void *routine_default(void *args) {
     unsubscribe(r_args->queue, pthread_self());
     printf("Thread %d unsubscribed.\n", r_args->routine_number);
 
-    free(r_args); // Free allocated memory for the routine args
+    free(r_args);
     return NULL;
 }
-
-// void *routine2(void *args) {
-//     RoutineArgs r_args = *(RoutineArgs *)args;
-//     int *msg1 = getMsg(r_args.queue, pthread_self());
-//     printf("routine %d received message: %s\n", r_args.routine_number, *msg2);
-//     free(msg1);
-
-//     int *msg2 = getMsg(r_args.queue, pthread_self());
-//     printf("routine %d received message: %s\n", r_args.routine_number, *msg2);
-//     free(msg2);
-// }
 
 void *simple_test(void *arg) {
     bool *success = malloc(sizeof(bool));
@@ -246,7 +235,7 @@ void *simple_test(void *arg) {
     pthread_create(&threads[0], NULL, routine_default, r_args0);
     pthread_create(&threads[1], NULL, routine_default, r_args1);
 
-    // sleep(3); // Give subscribers time to wait on messages
+    sleep(3); // Give subscribers time to wait on messages
 
     int *msg1 = malloc(sizeof(int));
     int *msg2 = malloc(sizeof(int));
@@ -265,19 +254,15 @@ void *simple_test(void *arg) {
 }
 
 int main() {
-    // bool result1 = test_create_destroy_queue();
-    // printf("test_create_destroy_queue: %s\n", result1 ? "success" : "failed");
+    bool result1 = test_create_destroy_queue();
+    printf("test_create_destroy_queue: %s\n", result1 ? "success" : "failed");
 
-    // bool result2 = test_subscribe_unsubscribe();
-    // printf("test_subscribe_unsubscribe: %s\n", result2 ? "success" : "failed");
+    bool result2 = test_subscribe_unsubscribe();
+    printf("test_subscribe_unsubscribe: %s\n", result2 ? "success" : "failed");
 
-    // bool *result3 = test_1_publisher_1_subscriber(NULL);
-    // printf("test_1_publisher_1_subscriber: %s\n", *result3 ? "success" : "failed");
-    // free(result3);
-
-    // bool *result4 = test4(NULL);
-    // printf("test4: %s\n", *result4 ? "success" : "failed");
-    // free(result4);
+    bool *result3 = test_1_publisher_1_subscriber(NULL);
+    printf("test_1_publisher_1_subscriber: %s\n", *result3 ? "success" : "failed");
+    free(result3);
 
     bool *simple_result = simple_test(NULL);
     printf("simple_test: %s\n", *simple_result ? "success" : "failed");
