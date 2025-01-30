@@ -146,6 +146,12 @@ void unsubscribe(TQueue *queue, pthread_t thread) {
 void addMsg(TQueue *queue, void *msg_data) {
     pthread_mutex_lock(&queue->lock);
 
+    // Exit if there are no subscribers
+    if (queue->subscribers == NULL) {
+        pthread_mutex_unlock(&queue->lock);
+        return;
+    }
+
     // Block if the queue is full
     while (queue->size >= queue->capacity) {
         pthread_cond_wait(&queue->not_full, &queue->lock);
