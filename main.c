@@ -313,6 +313,43 @@ void *test_big(void *result) {
     return success;
 }
 
+void *yet_another_test_argh(void *arg) {
+    bool *success = malloc(sizeof(bool*));
+    *success = true;
+
+    TQueue *queue = createQueue(3);
+    
+    subscribe(queue, pthread_self());
+
+    int *msg1 = malloc(sizeof(int*));
+    int *msg2 = malloc(sizeof(int*));
+    int *msg3 = malloc(sizeof(int*));
+    *msg1 = 10;
+    *msg2 = 20;
+    *msg3 = 30;
+
+    addMsg(queue, msg1);
+    addMsg(queue, msg2);
+    addMsg(queue, msg3);
+
+    removeMsg(queue, msg2);
+
+    int *result = malloc(sizeof(int*));
+    *result = getAvailable(queue, pthread_self());
+    
+    if (*result != 2) {
+        *success = false;
+    }
+
+    destroyQueue(queue);
+    free(msg1);
+    free(msg2);
+    free(msg3);
+    free(result);
+
+    return success;
+}
+
 int main() {
     bool result1 = test_create_destroy_queue();
     printf("test_create_destroy_queue: %s\n", result1 ? "success" : "failed");
@@ -331,6 +368,10 @@ int main() {
     bool *big_result = test_big(NULL);
     printf("test_big: %s\n", *big_result ? "success" : "failed");
     free(big_result);
+
+    bool *yet_another_result = yet_another_test_argh(NULL);
+    printf("yet another test: %s\n", *yet_another_result ? "success" : "failed");
+    free(yet_another_result);
 
     return 0;
 }
