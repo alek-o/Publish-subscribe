@@ -146,7 +146,6 @@ void unsubscribe(TQueue *queue, pthread_t thread) {
 
 void addMsg(TQueue *queue, void *msg_data) {
     pthread_mutex_lock(&queue->lock);
-    printf("entered addMsg\n");
 
     // Exit if there are no subscribers
     if (queue->subscribers == NULL) {
@@ -186,7 +185,6 @@ void addMsg(TQueue *queue, void *msg_data) {
         current = current->next;
     }
 
-    printf("exit addMsg\n"); 
     // Signal that the queue is not empty
     pthread_cond_broadcast(&queue->not_empty);
     pthread_mutex_unlock(&queue->lock);
@@ -196,7 +194,6 @@ void addMsg(TQueue *queue, void *msg_data) {
 
 void* getMsg(TQueue *queue, pthread_t thread) {
     pthread_mutex_lock(&queue->lock);
-    printf("entered getMsg\n");
 
     // Find the subscriber
     Subscriber *current = queue->subscribers;
@@ -212,14 +209,10 @@ void* getMsg(TQueue *queue, pthread_t thread) {
             if (msg) {
                 current->last_read = msg;
                 msg->ref_count--;
-                printf("message %ls ref_count = %d\n", (int*)msg->data, msg->ref_count);
 
                 // If the reference count reaches zero, remove the message
                 if (msg->ref_count == 0) {
-                    printf("messages left before deletion: %d\n", queue->size);
-                    printf("deleting message %ls\n", (int*)msg->data);
                     removeMsg(queue, msg);
-                    printf("messages left: %d\n", queue->size);
                 }
 
                 pthread_mutex_unlock(&queue->lock);
@@ -229,7 +222,6 @@ void* getMsg(TQueue *queue, pthread_t thread) {
         current = current->next;
     }
 
-    printf("exit getMsg\n");
     pthread_mutex_unlock(&queue->lock);
     return NULL; // Thread is not subscribed
 }
@@ -264,9 +256,7 @@ int getAvailable(TQueue *queue, pthread_t thread) {
 //--------------------------------------------------------------------------------
 
 void removeMsg(TQueue *queue, void *msg) {
-    printf("entered removeMsg\n");
     if (!queue || !msg) {
-        printf("return 1st statement\n");
         return;
     }
 
@@ -286,7 +276,6 @@ void removeMsg(TQueue *queue, void *msg) {
 
     // If the message is not found, unlock and return
     if (!current) {
-        printf("return 2nd statement\n");
         pthread_mutex_unlock(&queue->lock);
         return;
     }
